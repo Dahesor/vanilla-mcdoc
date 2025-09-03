@@ -1,4 +1,5 @@
 use ::java::util::color::RGBA
+use ::java::util::profile::Profile
 use ::java::world::item::ItemStack
 use ::java::world::component::DataComponentPatch
 use ::java::data::dialog::Dialog
@@ -6,7 +7,7 @@ use ::java::data::dialog::Dialog
 type Text = (
 	string |
 	TextObject |
-	[Text] |
+	[Text] @ 1.. |
 )
 
 type TextObject = (
@@ -20,7 +21,7 @@ type TextObject = (
 		translate: #[translation_key] string,
 		#[since="1.19.4"]
 		fallback?: #[translation_value] string,
-		with?: [Text],
+		with?: [Text] @ 1..,
 		#[since="1.20.3"]
 		type?: "translatable",
 		...TextBase,
@@ -35,7 +36,7 @@ type TextObject = (
 		...TextBase,
 	} |
 	struct SelectorText {
-		selector: #[entity] #[selector] string,
+		selector: #[entity] string,
 		#[since="1.17"]
 		separator?: Text,
 		#[since="1.20.3"]
@@ -58,7 +59,7 @@ type TextObject = (
 		...TextNbtBase,
 	} |
 	struct EntityNbtText {
-		entity: #[entity(amount=multiple,type=entities)] #[selector] string,
+		entity: #[entity(amount=multiple,type=entities)] string,
 		nbt: #[nbt_path=minecraft:entity[[entity]]] string,
 		#[since="1.20.3"]
 		source?: "entity",
@@ -75,6 +76,24 @@ type TextObject = (
 		type?: "nbt",
 		...TextNbtBase,
 	} |
+	#[since="1.21.9"]
+	struct SpriteText {
+		/// Defaults to `minecraft:blocks`.
+		atlas?: #[id="atlas"] string,
+		sprite: #[id="texture"] string,
+		object?: "atlas",
+		type?: "object",
+		...TextBase,
+	} |
+	#[since="1.21.9"]
+	struct PlayerHeadText {
+		player: Profile,
+		/// Whether the head layer is rendered. Defaults to `true`.
+		hat?: boolean,
+		object?: "player",
+		type?: "object",
+		...TextBase,
+	} |
 )
 
 struct TextNbtBase {
@@ -85,7 +104,7 @@ struct TextNbtBase {
 }
 
 struct TextBase {
-	extra?: [Text],
+	extra?: [Text] @ 1..,
 	...TextStyle,
 }
 
@@ -297,11 +316,15 @@ enum(string) Keybind {
 	LoadToolbarActivator = "key.loadToolbarActivator",
 	PickItem = "key.pickItem",
 	Playerlist = "key.playerlist",
+	#[since="1.21.6"]
+	QuickActions = "key.quickActions",
 	Right = "key.right",
 	SaveToolbarActivator = "key.saveToolbarActivator",
 	Screenshot = "key.screenshot",
 	SmoothCamera = "key.smoothCamera",
 	Sneak = "key.sneak",
+	#[since="1.21.9"]
+	SpectatorHotbar = "key.spectatorHotbar",
 	SpectatorOutlines = "key.spectatorOutlines",
 	Sprint = "key.sprint",
 	SwapOffhand = "key.swapOffhand",
