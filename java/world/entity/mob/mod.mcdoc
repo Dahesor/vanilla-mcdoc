@@ -44,8 +44,6 @@ struct LivingEntity {
 	ActiveEffects?: [MobEffectInstance],
 	#[since="1.20.2"]
 	active_effects?: [MobEffectInstance],
-	/// Whether it should have an AI.
-	NoAI?: boolean,
 	/// Team to join when it is spawned.
 	Team?: #[team] string,
 	/// The UUID of the player that last hurt this entity. Stored for 100 ticks.
@@ -101,6 +99,8 @@ struct MobBase {
 	PersistenceRequired?: boolean,
 	/// Whether it is left handed.
 	LeftHanded?: boolean,
+	/// Whether it should have an AI.
+	NoAI?: boolean,
 	/// What the leash is attached to.
 	#[until="1.20.5"]
 	Leash?: (UUIDLeash | BlockLeash),
@@ -127,9 +127,15 @@ struct DropChances {
 
 struct NeutralMob {
 	/// Ticks that it will be angry for.
+	#[until="1.21.11"]
 	AngerTime?: int,
-	#[uuid]
-	AngryAt?: int[] @ 4,
+	/// The time anger ends.
+	#[since="1.21.11"]
+	anger_end_tine?: long,
+	#[until="1.21.11"]
+	AngryAt?: #[uuid] int[] @ 4,
+	#[since="1.21.11"]
+	angry_at?: #[uuid] int[] @ 4,
 }
 
 struct AgeableMob {
@@ -221,6 +227,8 @@ dispatch minecraft:entity[
 	stray,
 	wither_skeleton,
 ] to MobBase
+#[since="1.21.11"]
+dispatch minecraft:entity[parched] to MobBase
 
 dispatch minecraft:entity[squid] to struct Squid {
 	...MobBase,

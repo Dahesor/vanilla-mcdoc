@@ -38,19 +38,32 @@ struct ModelElement {
 			tintindex?: int,
 		},
 	},
-	rotation?: struct ModelElementRotation {
-		origin: [float] @ 3,
-		axis: Axis,
-		angle: (
-			#[until="1.21.6"] (-45.0 | -22.5 | 0.0 | 22.5 | 45.0) |
-			#[since="1.21.6"] float @ -45..45 |
-		),
-		/// Defaults to `false`.
-		rescale?: boolean,
-	},
+	rotation?: ModelElementRotation,
 	shade?: boolean,
 	#[since="1.21.2"]
 	light_emission?: int @ 0..15,
+}
+
+type ModelElementRotation = (
+	#[deprecated="1.21.11"] struct SingleAxisModelElementRotation {
+		...ModelElementRotationBase,
+		axis: Axis,
+		angle: (
+			#[until="1.21.6"] (-45.0 | -22.5 | 0.0 | 22.5 | 45.0) |
+			#[since="1.21.6"] #[until="1.21.11"] float @ -45..45 |
+			#[since="1.21.11"] float |
+		),
+	} |
+	#[since="1.21.11"] struct MultipleAxesModelElementRotation {
+		...ModelElementRotationBase,
+		[Axis]?: float,
+	}
+)
+
+struct ModelElementRotationBase {
+	origin: [float] @ 3,
+	/// Defaults to `false`.
+	rescale?: boolean,
 }
 
 enum(string) Axis {

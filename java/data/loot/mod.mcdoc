@@ -1,3 +1,4 @@
+use ::java::util::slot::SlotSource
 use ::java::util::text::Text
 use super::util::MinMaxBounds
 use super::util::NumberProvider
@@ -64,6 +65,10 @@ enum(string) EntityTarget {
 	#[since="1.21.9"] InteractingEntity = "interacting_entity",
 }
 
+// both are enum in game code, like EntityTarget
+type BlockEntityTarget = "block_entity"
+type ItemStackTarget = "tool"
+
 struct LootPool {
 	rolls: (
 		#[until="1.17"] RandomIntGenerator |
@@ -87,7 +92,6 @@ struct LootPoolEntry {
 }
 
 struct LootPoolEntryBase {
-	functions?: [LootFunction],
 	conditions?: [LootCondition],
 }
 
@@ -95,6 +99,7 @@ struct SingletonPoolEntry {
 	weight?: int @ 1..,
 	quality?: int,
 	...LootPoolEntryBase,
+	functions?: [LootFunction],
 }
 
 dispatch minecraft:loot_pool_entry[empty] to SingletonPoolEntry
@@ -131,6 +136,12 @@ dispatch minecraft:loot_pool_entry[loot_table] to struct LootTablePoolEntry {
 		#[id="loot_table"] string |
 		LootTable |
 	),
+	...SingletonPoolEntry,
+}
+
+#[since="1.21.11"]
+dispatch minecraft:loot_pool_entry[slots] to struct SlotsPoolEntry {
+	slot_source: SlotSource,
 	...SingletonPoolEntry,
 }
 

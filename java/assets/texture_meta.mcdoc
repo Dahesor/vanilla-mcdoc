@@ -37,6 +37,9 @@ dispatch minecraft:resource[texture_meta] to struct TextureMeta {
 		/// Custom mipmap values for the texture.
 		mipmaps?: int[],
 	},
+	/// Defaults to `auto`.
+	#[since="1.21.11"]
+	mipmap_strategy?: MipmapStrategy,
 }
 
 struct GuiSpriteScaling {
@@ -70,4 +73,12 @@ struct NineSliceBorder {
 	top: int @ 0..,
 	right: int @ 0..,
 	bottom: int @ 0..,
+}
+
+enum(string) MipmapStrategy {
+	Auto = "auto",
+	Mean = "mean",
+	Cutout = "cutout",
+	StrictCutout = "strict_cutout",
+	DarkCutout = "dark_cutout",
 }

@@ -167,9 +167,9 @@ struct RootVehicle {
 
 struct RecipeBook {
 	/// Recipes the player has acquired.
-	recipes?: #[id="recipe"] string,
+	recipes?: [#[id="recipe"] string],
 	/// Recipes that should pulse in the crafting book.
-	toBeDisplayed?: #[id="recipe"] string,
+	toBeDisplayed?: [#[id="recipe"] string],
 	/// Whether the player has filtered crafting on in the crafting table.
 	isFilteringCraftable?: boolean,
 	/// Whether the player has the crafting book open in the crafting table.
@@ -202,9 +202,25 @@ struct Respawn {
 	/// The block coordinates of the player's respawn point
 	pos: int[] @ 3,
 	/// The Y-rotation of the player's respawn point
+	#[until="1.21.9"]
 	angle?: float,
-	/// Dimension of the player's respawn point. Defaults to overworld.
-	dimension?: #[id="dimension"] string,
+	/// The Y-rotation of the player's respawn point
+	#[since="1.21.9"]
+	yaw: float,
+	/// The X-rotation of the player's respawn point
+	#[since="1.21.9"]
+	pitch: float,
+	...(
+		#[until="1.21.9"] struct {
+			/// Dimension of the player's respawn point. Defaults to overworld.
+			dimension?: #[id="dimension"] string,
+		} |
+		#[since="1.21.9"] struct {
+			// required since 1.21.9
+			/// Dimension of the player's respawn point. Defaults to overworl.
+			dimension: #[id="dimension"] string,
+		} |
+	),
 	/// Whether the player must spawn at the respawn point.
 	forced?: boolean,
 }
