@@ -56,7 +56,10 @@ struct BlockPredicate {
 	#[until="1.20.5"]
 	tag?: #[id(registry="block",tags="implicit")] string,
 	state?: mcdoc:block_states[[blocks]],
-	nbt?: #[nbt=minecraft:block[[blocks]]] string,
+	nbt?: (
+		#[nbt=minecraft:block[[blocks]]] string |
+		#[since="1.20.5"] minecraft:block[[blocks]]
+	),
 	/// Match exact data component values on the block entity.
 	#[since="1.21.5"]
 	components?: DataComponentExactPredicate,
@@ -90,7 +93,7 @@ struct LocationPredicate {
 		#[since="1.16"] #[id="worldgen/biome"] string |
 	),
 	#[since="1.20.5"]
-	biomes?: (#[id=(registry="worldgen/biome",tags=allowed)] string | [#[id="worldgen/biome"] string]),
+	biomes?: (#[id=(registry="worldgen/biome",tags="allowed")] string | [#[id="worldgen/biome"] string]),
 	#[until="1.19"]
 	feature?: (
 		#[until="1.18.2"] string |
@@ -99,7 +102,7 @@ struct LocationPredicate {
 	#[since="1.19"] #[until="1.20.5"]
 	structure?: #[id="worldgen/structure"] string,
 	#[since="1.20.5"]
-	structures?: (#[id=(registry="worldgen/structure",tags=allowed)] string | [#[id="worldgen/structure"] string]),
+	structures?: (#[id=(registry="worldgen/structure",tags="allowed")] string | [#[id="worldgen/structure"] string]),
 	dimension?: #[id="dimension"] string,
 	/// Calculated using: `max(sky-darkening, block)`.
 	light?: struct LocationPredicateLight {
@@ -133,7 +136,10 @@ struct EntityPredicate {
 	#[since="1.19"]
 	type_specific?: EntitySubPredicate,
 	team?: #[team] string,
-	nbt?: #[nbt=minecraft:entity[[type]]] string,
+	nbt?: (
+		#[nbt=minecraft:entity[[type]]] string |
+		#[since="1.20.5"] minecraft:entity[[type]]
+	),
 	location?: LocationPredicate,
 	distance?: DistancePredicate,
 	flags?: EntityFlagsPredicate,
@@ -324,6 +330,11 @@ dispatch minecraft:entity_sub_predicate[player] to struct PlayerPredicate {
 		sneak?: boolean,
 		sprint?: boolean,
 	},
+	#[since="26.1"]
+	food?: struct FoodPredicate {
+		level?: MinMaxBounds<int>,
+		saturation?: MinMaxBounds<double>,
+	}
 }
 
 #[until="1.21.5"]

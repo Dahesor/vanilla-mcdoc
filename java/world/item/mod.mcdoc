@@ -1,6 +1,7 @@
 use ::java::util::attribute::AttributeName
 use ::java::util::attribute::LegacyOperation
 use ::java::util::slot::EquipmentSlotGroup
+use ::java::data::util::NumberProvider
 use ::java::world::block::BlockEntityData
 use ::java::world::component::DataComponentPatch
 use ::java::world::component::DataComponentExactPredicate
@@ -33,6 +34,13 @@ type ItemStackOfComponent<T> = struct {
 type ItemStack = ItemStackOfComponent<DataComponentPatch>
 type ItemCost = ItemStackOfComponent<DataComponentExactPredicate>  // used by villager trade
 
+// 26.1 villager trade field
+struct TradeCost {
+	...SingleItemOfComponent<DataComponentExactPredicate>,
+	/// Defaults to `1`.
+	count?: NumberProvider,
+}
+
 // Until 1.20.5
 struct ItemBase {
 	/// Damage that an item has. Only used for tools, armor, etc.
@@ -57,18 +65,7 @@ struct ItemBase {
 	/// Display settings.
 	display?: Display,
 	/// Bitfield for which flags to hide on an item.
-	#[bitfield(enum (int) {
-		Enchantments = 1,
-		AttributeModifiers = 2,
-		Unbreakable = 3,
-		CanDestroy = 4,
-		CanPlaceOn = 5,
-		Other = 6,
-		#[since="1.16.2"]
-		LeatherColor = 7,
-		#[since="1.19.4"]
-		Trim = 8
-	})]
+	#[bitfield=HideFlags]
 	HideFlags?: int,
 	/// Trim to apply to the item & armor when worn.
 	#[since="1.19.4"]
@@ -109,9 +106,8 @@ struct AttributeModifier {
 	/// Lower bits of the modifier's UUID.
 	#[until="1.16"]
 	UUIDLeast?: long,
-	#[uuid]
 	#[since="1.16"]
-	UUID?: int[] @ 4,
+	UUID?: #[uuid] int[] @ 4,
 }
 
 /// Display settings of an item.
@@ -120,6 +116,19 @@ struct Display {
 	Name?: #[text_component] string,
 	/// A list of JSON text components, each element being a lore line.
 	Lore?: [#[text_component] string],
+}
+
+enum(int) HideFlags {
+	Enchantments = 1,
+	AttributeModifiers = 2,
+	Unbreakable = 3,
+	CanDestroy = 4,
+	CanPlaceOn = 5,
+	Other = 6,
+	#[since="1.16.2"]
+	LeatherColor = 7,
+	#[since="1.19.4"]
+	Trim = 8,
 }
 
 /// An item that can be placed as a block

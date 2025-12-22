@@ -71,7 +71,7 @@ struct ARGBColorAttribute {
 		modifier?: ColorModifierType,
 		keyframes: [struct {
 			ticks: int @ 0..,
-			value: minecraft:environment_attribute_argb_color_modifier[[modifier]],
+			value: minecraft:environment_attribute_argb_color_modifier[[%parent.%parent.modifier]],
 		}],
 	},
 }
@@ -141,6 +141,13 @@ dispatch minecraft:environment_attribute[
 	"visual/water_fog_color",
 	"visual/sky_color",
 	"visual/sky_light_color",
+] to RGBColorAttribute
+
+#[since="26.1"] 
+dispatch minecraft:environment_attribute[
+	"visual/ambient_light_color",
+	"visual/block_light_tint",
+	"visual/night_vision_color",
 ] to RGBColorAttribute
 
 dispatch minecraft:environment_attribute[

@@ -143,6 +143,11 @@ dispatch minecraft:loot_function[enchant_randomly] to struct EnchantRandomly {
 	///
 	/// Note: Books are considered compatible with all Enchantments.
 	only_compatible?: boolean,
+	/// Whether to add `additional_trade_cost` component to the enchanted item.
+	/// Additional cost value is determined by the enchantment level, with the formula `2 + random(0, 5 + level * 10) + 3 * level`.
+	/// Defaults to `false`.
+	#[since="26.1"]
+	include_additional_cost_component?: boolean,
 	...Conditions,
 }
 
@@ -160,6 +165,11 @@ dispatch minecraft:loot_function[enchant_with_levels] to struct EnchantWithLevel
 	/// Whether treasure enchantments are allowed on this item.
 	#[until="1.21"]
 	treasure?: boolean,
+	/// Whether to add `additional_trade_cost` component to the enchanted item.
+	/// Additional cost value is equal to the level cost determined by `levels`.
+	/// Defaults to `false`.
+	#[since="26.1"]
+	include_additional_cost_component?: boolean,
 	...Conditions,
 }
 
@@ -168,7 +178,7 @@ dispatch minecraft:loot_function[exploration_map] to struct ExplorationMap {
 	/// Generated structure to locate. Accepts any of the structure types used by the `/locate` command. Defaults to buried treasure.
 	destination?: (
 		#[until="1.19"] string | // TODO: low-priority, this is an enum
-		#[since="1.19"] #[id(registry="worldgen/structure",tags=implicit)] string |
+		#[since="1.19"] #[id(registry="worldgen/structure",tags="implicit")] string |
 	),
 	/// The icon used to mark the destination on the map. Accepts any of the map icon text IDs (case insensitive).
 	/// If `mansion` or `monument` is used, the color of the lines on the item texture changes to match the corresponding explorer map.
@@ -442,10 +452,11 @@ dispatch minecraft:loot_function[set_count] to struct SetCount {
 
 /// Sets the durability of applicable items.
 dispatch minecraft:loot_function[set_damage] to struct SetDamage {
-	/// Decimal percentage. Can be negative when used in combination with `add`.
+	/// Decimal percentage. Can be negative when used in combination with `add`. \
+	/// Clamps to a float between `-1` & `1` (inclusive).
 	damage: (
 		#[until="1.17"] RandomValueBounds |
-		#[since="1.17"] NumberProvider<float @ -1..1> |
+		#[since="1.17"] NumberProvider |
 	),
 	/// Whether to add to the existing damage of the item. Defaults to `false`.
 	#[since="1.17"]
@@ -455,9 +466,10 @@ dispatch minecraft:loot_function[set_damage] to struct SetDamage {
 
 #[since="1.17"]
 dispatch minecraft:loot_function[set_enchantments] to struct SetEnchantments {
-	/// A map of enchantments to levels. Setting an enchantment to `0` removes it from the item.
+	/// A map of enchantments to levels. Setting an enchantment to `0` removes it from the item. \
+	/// Each level is clamped to a positive integer.
 	enchantments: struct {
-		[#[id="enchantment"] string]: NumberProvider<int @ 0..>,
+		[#[id="enchantment"] string]: NumberProvider,
 	},
 	/// Whether to add to the level of each enchantment. Defaults to `false`.
 	add?: boolean,
@@ -561,6 +573,24 @@ dispatch minecraft:loot_function[set_custom_model_data] to struct SetCustomModel
 dispatch minecraft:loot_function[set_potion] to struct SetPotion {
 	/// The potion identifier.
 	id: #[id="potion"] string,
+	...Conditions,
+}
+
+#[since="26.1"]
+dispatch minecraft:loot_function[set_random_dyes] to struct SetRandomDyes {
+	/// Applies specified number of random dyes to the item.
+	/// For example, one possible outcome of `"number_of_dyes": 2` is `#2C3065`, which is the combination of a blue dye and a black dye.
+	/// The same dye color can be selected multiple times.
+	/// Only has effect on `#dyeable` items.
+	number_of_dyes: NumberProvider,
+	...Conditions,
+}
+
+#[since="26.1"]
+dispatch minecraft:loot_function[set_random_potion] to struct SetRandomPotion {
+	/// Possible potions to select from.
+	/// Defaults to all potions.
+	options?: (#[id(registry="potion",tags="allowed")] string | #[id="potion"] string),
 	...Conditions,
 }
 

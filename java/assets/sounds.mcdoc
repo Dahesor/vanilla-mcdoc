@@ -1,11 +1,11 @@
 dispatch minecraft:resource[sounds] to struct Sounds {
-	//TODO: this actually registers new weighed_sound_events. Namespace is always the namespace of file
-	[#[id="weighed_sound_event"] string]: SoundEventRegistration,
+	// TODO: Namespace is always (implicitly) the namespace of file, this would need a custom `id` argument to get correct behavior
+	[string]: SoundEventRegistration,
 }
 
 struct SoundEventRegistration {
 	/// The sound files this sound event uses. One sound is randomly selected to play when the event is triggered. Defaults to assumed path.
-	sounds?: [(string | Sound)],
+	sounds?: [(#[id="sound"] string | Sound)],
 	/// If true the sounds listed should replace the ones listed in the minecraft sounds.json for this sound event.
 	/// False if the sounds listed should be added. If undefined. Defaults to false.
 	replace?: boolean,

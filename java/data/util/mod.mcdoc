@@ -15,8 +15,10 @@ type MinMaxBounds<T> = (
 type IntRange = (
 	int |
 	struct {
-		min?: NumberProvider<int>,
-		max?: NumberProvider<int>,
+		/// Clamped to an integer.
+		min?: NumberProvider,
+		/// Clamped to an integer.
+		max?: NumberProvider,
 	} |
 )
 
@@ -64,6 +66,7 @@ dispatch minecraft:random_int_generator[constant] to struct ConstantIntGenerator
 	value: int,
 }
 
+// TODO: Determine why we're not using a generic for this
 // Since 1.17
 type NumberProvider = (
 	float |
@@ -100,6 +103,11 @@ dispatch minecraft:number_provider[storage] to struct StorageNumberProvider {
 
 dispatch minecraft:number_provider[enchantment_level] to struct EnchantmentLevelProvider {
 	amount: LevelBasedValue,
+}
+
+#[since="26.1"]
+dispatch minecraft:number_provider[sum] to struct SumNumberProvider {
+	summands: [NumberProvider],
 }
 
 type ScoreProvider = (
