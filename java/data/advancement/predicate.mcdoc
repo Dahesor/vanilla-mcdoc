@@ -45,6 +45,10 @@ struct EnchantmentPredicate {
 	levels?: MinMaxBounds<int>,
 }
 
+struct BlockPredicateState {
+	[mcdoc:block_state_keys[[%parent.blocks]]]: MinMaxBounds<mcdoc:block_states[[%parent.blocks]][[%key]]>,
+}
+
 struct BlockPredicate {
 	#[until="1.17"]
 	block?: #[id="block"] string,
@@ -55,9 +59,7 @@ struct BlockPredicate {
 	),
 	#[until="1.20.5"]
 	tag?: #[id(registry="block",tags="implicit")] string,
-	state?: struct {
-		[mcdoc:block_state_keys[[%parent.blocks]]]: MinMaxBounds<mcdoc:block_states[[%parent.blocks]][[%key]]>,
-	},
+	state?: BlockPredicateState,
 	nbt?: (
 		#[nbt=minecraft:block[[blocks]]] string |
 		#[since="1.20.5"] minecraft:block[[blocks]]
@@ -241,6 +243,7 @@ dispatch minecraft:entity_sub_predicate[axolotl] to struct AxolotlPredicate {
 	variant: AxolotlVariant,
 }
 
+#[until="1.21.2"]
 dispatch minecraft:entity_sub_predicate[boat] to struct BoatPredicate {
 	variant: BoatType,
 }
@@ -577,7 +580,11 @@ struct DamageSourcePredicate {
 }
 
 struct DamageTagPredicate {
-	id: #[id(registry="damage_type",tags="implicit")] string,
+	id: (
+		#[until="26.3"] #[id(registry="damage_type",tags="implicit")] string |
+		#[since="26.3"] #[id(registry="damage_type",tags="allowed")] string |
+		#[since="26.3"] [#[id="damage_type"] string] |
+	),
 	/// Whether the damage is expected to have or not have the tag.
 	expected: boolean,
 }

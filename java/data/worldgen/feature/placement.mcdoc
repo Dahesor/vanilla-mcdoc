@@ -1,3 +1,4 @@
+use ::java::util::direction::VerticalDirection
 use super::ConfiguredFeatureRef
 use super::block_predicate::BlockPredicate
 use super::super::CarveStep
@@ -44,6 +45,16 @@ dispatch minecraft:placement_modifier[count_on_every_layer] to struct CountOnEve
 	count: IntProvider<int @ 0..256>,
 }
 
+#[since="26.3"]
+dispatch minecraft:placement_modifier[cuboid] to struct CuboidModifier {
+	xz_size: IntProvider<int @ 1..16>,
+	y_size: IntProvider<int @ 1..16>,
+	/// Defaults to `true`.
+	include_interior?: boolean,
+	/// Defaults to `true`.
+	include_edges?: boolean,
+}
+
 dispatch minecraft:placement_modifier[noise_threshold_count] to struct NoiseThresholdCountModifier {
 	noise_level: float,
 	below_noise: int,
@@ -57,15 +68,10 @@ dispatch minecraft:placement_modifier[noise_based_count] to struct NoiseBasedCou
 }
 
 dispatch minecraft:placement_modifier[environment_scan] to struct EnvironmentScanModifier {
-	direction_of_search: SearchDirection,
+	direction_of_search: VerticalDirection,
 	max_steps: int @ 1..32,
 	target_condition: BlockPredicate,
 	allowed_search_condition?: BlockPredicate,
-}
-
-enum(string) SearchDirection {
-	Up = "up",
-	Down = "down",
 }
 
 #[since="1.21"]
@@ -82,9 +88,22 @@ dispatch minecraft:placement_modifier[height_range] to struct HeightRangeModifie
 	height: HeightProvider,
 }
 
+#[since="26.3"]
+dispatch minecraft:placement_modifier[offset] to struct OffsetModifier {
+	x: IntProvider<int @ -16..16>,
+	y: IntProvider<int @ -16..16>,
+	z: IntProvider<int @ -16..16>,
+}
+
+#[until="26.3"]
 dispatch minecraft:placement_modifier[random_offset] to struct RandomOffsetModifier {
 	xz_spread: IntProvider<int @ -16..16>,
 	y_spread: IntProvider<int @ -16..16>,
+}
+
+#[since="26.3"]
+dispatch minecraft:placement_modifier[random_chance] to struct RandomChanceModifier {
+	chance: float @ 0..1,
 }
 
 dispatch minecraft:placement_modifier[surface_relative_threshold_filter] to struct SurfaceRelativeThresholdFilter {

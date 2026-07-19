@@ -291,7 +291,7 @@ dispatch minecraft:hover_event[show_entity] to struct ShowEntity {
 		type?: string,
 		id?: string,
 	},
-	#[since="1.16"]
+	#[since="1.16"] #[until="1.21.5"]
 	contents?: struct EntityHoverContent {
 		type: #[id="entity_type"] string,
 		id: #[uuid] (#[canonical] [int] @ 4 | string),
@@ -321,6 +321,7 @@ enum(string) Keybind {
 	#[since="1.21.11"] DebugDumpVersion = "key.debug.dumpVersion",
 	#[since="1.21.11"] DebugFocusPause = "key.debug.focusPause",
 	#[since="1.21.11"] DebugFpsCharts = "key.debug.fpsCharts",
+	#[since="26.3"] DebugImprovedTransparency = "key.debug.improvedTransparency",
 	#[since="26.1"] DebugLightmapTexture = "key.debug.lightmapTexture",
 	#[since="1.21.11"] DebugModifier = "key.debug.modifier",
 	#[since="1.21.11"] DebugNetworkCharts = "key.debug.networkCharts",

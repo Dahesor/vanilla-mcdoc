@@ -4,11 +4,13 @@ use ::java::data::trim::TrimPattern
 use ::java::data::variants::instrument::Instrument
 use ::java::data::util::SoundEventRef
 use ::java::data::damage_type::DamageType
+use ::java::data::worldgen::feature::block_state_provider::BlockStateProvider
 use ::java::util::Filterable
 use ::java::util::GlobalPos
 use ::java::util::attribute::AttributeOperation
 use ::java::util::color::DyeColor
 use ::java::util::color::RGB
+use ::java::util::direction::Direction
 use ::java::util::effect::MobEffectInstance
 use ::java::util::slot::EquipmentSlot
 use ::java::util::slot::EquipmentSlotGroup
@@ -147,8 +149,67 @@ struct ItemDamageFunction {
 	factor: float,
 }
 
+#[since="26.3"]
+dispatch minecraft:data_component[block_transformer] to [BlockTransformer] @ 1..200
+
+struct BlockTransformer {
+	/// If the provider returns no result, the next transformer will be attempted.
+	block_state_provider: BlockStateProvider,
+	/// Defaults to not playing sound.
+	sound?: SoundEventRef,
+	/// Defaults to `none`.
+	particle?: BlockTransformParticle,
+	/// If a disallowed face is interacted with, the next transformer will be attempted. \
+	/// Defaults to empty (allowing all faces).
+	disallowed_faces?: [Direction],
+	/// The loot to drop on a successful transformation. \
+	/// Defaults to drop nothing.
+	loot?: #[id="loot_table"] string,
+	/// Where the `loot` should drop. \
+	/// Defaults to `from_middle`.
+	drop_strategy?: BlockTransformDropStrategy,
+	/// How nearby blocks are affected by the transformation. \
+	/// Defaults to `single_block`.
+	transform_type?: BlockTransformType,
+	/// Whether the transformed block should update based on neighboring blocks. \
+	/// Defaults to `true`.
+	update_from_neighbors?: boolean,
+	/// Only has effect on stackable items. \
+	/// Defaults to `true`.
+	consume_on_use?: boolean,
+	/// Only has effect on unstackable items. \
+	/// Defauls to 1.
+	item_damage_per_use?: int @ 0..,
+}
+
+enum(string) BlockTransformParticle {
+	None = "none",
+	Scrape = "scrape",
+	WaxOn = "wax_on",
+	WaxOff = "wax_off",
+}
+
+enum(string) BlockTransformDropStrategy {
+	ClickedFace = "clicked_face",
+	FromMiddle = "from_middle",
+}
+
+enum(string) BlockTransformType {
+	SingleBlock = "single_block",
+	/// If the original block and the transformed block are both copper chests of any kind, the transform applies to the other half of the double chest.
+	CopperChest = "copper_chest",
+}
+
 #[since="1.21.5"]
 dispatch minecraft:data_component[break_sound] to SoundEventRef
+
+#[since="26.3"]
+dispatch minecraft:data_component[brewing_fuel] to struct BrewingFuel {
+	// The number of times this fuel will brew before being consumed.
+	uses: #[id="number_provider"] string,
+	// The speed of the brewing.
+	speed_multiplier: #[id="number_provider"] string,
+}
 
 dispatch minecraft:data_component[bucket_entity_data] to (
 	#[canonical] BucketEntityData |
@@ -166,6 +227,9 @@ struct BucketEntityData {
 	Glowing?: boolean,
 	/// Whether the entity should take damage.
 	Invulnerable?: boolean,
+	/// Whether the entity should not despawn naturally.
+	#[since="26.2"]
+	PersistenceRequired?: boolean,
 	Health?: float,
 	/// Turns into the expiry time of the memory module `has_hunting_cooldown` for axolotls.
 	HuntingCooldown?: long,
@@ -177,7 +241,18 @@ struct BucketEntityData {
 	Variant?: AxolotlVariantInt,
 	/// The size variant for salmon.
 	#[until="1.21.4"]
-	type?: SalmonType
+	type?: SalmonType,
+	/// The age for axolotl and tadpole.
+	Age?: int,
+	/// The age locked state for axolotl and tadpole.
+	#[since="26.1"]
+	AgeLocked?: boolean,
+	/// The age for sulfur cube.
+	#[since="26.2"]
+	age?: int,
+	/// The age locked state for sulfur cube.
+	#[since="26.2"]
+	age_locked?: boolean,
 }
 
 dispatch minecraft:data_component[bundle_contents] to [ItemStackTemplate]
@@ -189,12 +264,17 @@ type AdventureModePredicate = (
 		predicates: [BlockPredicate] @ 1..,
 		show_in_tooltip?: boolean,
 	} |
-	#[since="1.21.5"] #[canonical] [BlockPredicate] |
+	#[since="1.21.5"] [BlockPredicate] @ 1.. |
 	BlockPredicate |
 )
 
 /// Crossbow projectiles that are loaded.
 dispatch minecraft:data_component[charged_projectiles] to [ItemStackTemplate]
+
+#[since="26.3"]
+dispatch minecraft:data_component[compostable] to struct Compostable {
+	layers: #[id="number_provider"] string,
+}
 
 #[since="1.21.2"]
 dispatch minecraft:data_component[consumable] to struct Consumable {
@@ -259,6 +339,14 @@ dispatch minecraft:consume_effect[teleport_randomly] to struct TeleportRandomlyC
 
 dispatch minecraft:consume_effect[play_sound] to struct PlaySoundConsumeEffect {
 	sound: SoundEventRef,
+}
+
+#[since="26.3"]
+dispatch minecraft:data_component[cooking_fuel] to struct CookingFuel {
+	// The time in ticks for which this fuel will burn.
+	burn_time: #[id="number_provider"] string,
+	// The speed of the cooking/smelting.
+	speed_multiplier: #[id="number_provider"] string,
 }
 
 dispatch minecraft:data_component[custom_model_data] to (
@@ -595,6 +683,15 @@ dispatch minecraft:data_component[max_stack_size] to int @ 1..99
 #[since="1.21.11"]
 dispatch minecraft:data_component[minimum_attack_charge] to float @ 0..1
 
+#[since="26.3"]
+dispatch minecraft:data_component[mob_visibility] to struct MobVisibility {
+	/// Entities to match.
+	targeting_entity_types: (#[id(registry="entity_type",tags="allowed")] string | [#[id="entity_type"] string]),
+	/// Visibility factor, with `0.0` reducing the range at which mobs detects the entity to `2`, while `10.0` increases the detection range tenfold.
+	/// While multiple items with this component stack, the maximum vision will still never exceed `10.0`.
+	visibility: float @ 0..10,
+}
+
 /// Sound to be played by a note block if this player head is placed above it.
 dispatch minecraft:data_component[note_block_sound] to (#[id="weighed_sound_event"] string)
 
@@ -774,6 +871,11 @@ dispatch minecraft:data_component[use_effects] to struct UseEffects {
 }
 
 dispatch minecraft:data_component[use_remainder] to ItemStackTemplate
+
+dispatch minecraft:data_component[villager_food] to struct VillagerFood {
+	/// How much hunger the item satiates in the Villager once eaten.
+	nutrition: int @ 1..,
+}
 
 /// When present, the 'Item Used' statistic will be incremented for each attack with the item.
 #[since="1.21.5"]

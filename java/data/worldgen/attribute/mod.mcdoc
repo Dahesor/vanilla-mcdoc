@@ -2,19 +2,25 @@ use ::java::util::color::StringRGB
 use ::java::util::color::StringARGB
 use ::java::util::particle::Particle
 use ::java::util::text::Text
+use ::java::util::FlatWeightedList
 use ::java::data::util::MoonPhase
 use ::java::data::util::SoundEventRef
 use ::java::data::timeline::AttributeTrackBase
 use super::biome::BiomeMusic
 use super::biome::MoodSound
 use super::biome::BiomeSoundAdditions
+use super::biome::NaturalMobSpawns
 use modifier::BooleanModifierType
 use modifier::FloatModifierType
 use modifier::ColorModifierType
+use modifier::MergeableModifierType
+use modifier::ListModifierType
 use modifier::BooleanAttributeModifier
 use modifier::FloatAttributeModifier
 use modifier::ColorAttributeModifier
 use modifier::TranslucentColorAttributeModifier
+use modifier::MergeableModifier
+use modifier::ListModifier
 use modifier::OverrideModifier
 
 type EnvironmentAttributeMap<K> = struct {
@@ -76,6 +82,33 @@ struct ARGBColorAttribute {
 	},
 }
 
+type MergeableAttribute<T> = struct {
+	value: T,
+	modifier: MergeableModifier<T>,
+	attribute_track: struct {
+		...AttributeTrackBase,
+		modifier?: MergeableModifierType,
+		keyframes: [struct {
+			ticks: int @ 0..,
+			value: T,
+		}],
+	},
+}
+
+// E: element type
+type ListAttribute<E> = struct {
+	value: [E],
+	modifier: ListModifier<E>,
+	attribute_track: struct {
+		...AttributeTrackBase,
+		modifier?: ListModifierType,
+		keyframes: [struct {
+			ticks: int @ 0..,
+			value: [E],
+		}],
+	}
+}
+
 type DiscreteAttribute<T> = struct {
 	value: T,
 	modifier: OverrideModifier<T>,
@@ -95,7 +128,7 @@ dispatch minecraft:environment_attribute[%unknown] to DiscreteAttribute<any>
 type PositionalEnvironmentAttribute = #[id(registry="environment_attribute", exclude=["gameplay/fast_lava", "gameplay/sky_light_level"])] string
 // Search "->" in `net.minecraft.world.attribute.AttributeTypes`
 // Currently FLOAT, ANGLE_DEGREES and INTEGER supports `toFloat()`
-// This type is used since 26.1, so there is no need to maintain #[since] attributes before 26.2
+// Since 26.1
 type NumericalEnvironmentAttribute = #[id] enum(string) {
 	CloudHeight = "visual/cloud_height",
 	FogStartDistance = "visual/fog_start_distance",
@@ -111,6 +144,8 @@ type NumericalEnvironmentAttribute = #[id] enum(string) {
 	StarBrightness = "visual/star_brightness",
 	MusicVolume = "audio/music_volume",
 	CatWakingUpGiftChance = "gameplay/cat_waking_up_gift_chance",
+	#[since="26.3"]
+	CreatureWorldgenSpawnProbability = "gameplay/creature_world_gen_spawn_probability",
 	SurfaceSlimeSpawnChance = "gameplay/surface_slime_spawn_chance",
 	TurtleEggHatchChance = "gameplay/turtle_egg_hatch_chance",
 	SkyLightLevel = "gameplay/sky_light_level",
@@ -158,6 +193,9 @@ dispatch minecraft:environment_attribute[
 	"gameplay/turtle_egg_hatch_chance",
 ] to FloatAttribute<float @ 0..1>
 dispatch minecraft:environment_attribute["gameplay/sky_light_level"] to FloatAttribute<float @ 0..15>
+// This is how Mojang define their UNIT_FLOAT_EPSILON range
+#[since="26.3"]
+dispatch minecraft:environment_attribute["gameplay/creature_world_gen_spawn_probability"] to FloatAttribute<float @ 0..0.9999999>
 
 dispatch minecraft:environment_attribute[
 	"visual/fog_color",
@@ -180,7 +218,10 @@ dispatch minecraft:environment_attribute[
 
 dispatch minecraft:environment_attribute["visual/default_dripstone_particle"] to DiscreteAttribute<Particle>
 
-dispatch minecraft:environment_attribute["visual/ambient_particles"] to DiscreteAttribute<[AmbientParticle]>
+#[since="26.3"]
+dispatch minecraft:environment_attribute["gameplay/natural_mob_spawns"] to MergeableAttribute<NaturalMobSpawns>
+
+dispatch minecraft:environment_attribute["visual/ambient_particles"] to ListAttribute<AmbientParticle>
 
 dispatch minecraft:environment_attribute["audio/background_music"] to DiscreteAttribute<struct BackgroundMusic {
 	/// Default music to play
@@ -197,12 +238,21 @@ dispatch minecraft:environment_attribute["audio/ambient_sounds"] to DiscreteAttr
 	additions?: (BiomeSoundAdditions | [BiomeSoundAdditions]),
 }>
 
-dispatch minecraft:environment_attribute["gameplay/bed_rule"] to DiscreteAttribute<struct BedRule {
+dispatch minecraft:environment_attribute["gameplay/bed_rule"] to DiscreteAttribute<BedRule>
+#[since="26.3"]
+dispatch minecraft:environment_attribute["gameplay/straw_bed_rule"] to DiscreteAttribute<BedRule>
+
+struct BedRule {
 	can_sleep: BedRuleType,
 	can_set_spawn: BedRuleType,
+	#[until="26.3"]
 	explodes?: boolean,
+	#[since="26.3"]
+	destroy_on_use?: boolean,
+	#[since="26.3"]
+	destroy_on_leave?: boolean,
 	error_message?: Text,
-}>
+}
 
 dispatch minecraft:environment_attribute["visual/moon_phase"] to DiscreteAttribute<MoonPhase>
 

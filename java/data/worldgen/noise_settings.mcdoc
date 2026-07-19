@@ -1,4 +1,5 @@
 use super::dimension::biome_source::ClimateParameters
+use super::dimension::biome_source::ClimateParameter
 use super::density_function::DensityFunctionRef
 use super::density_function::CubicSpline
 use super::structure_set::ConcentricRingsPlacement
@@ -36,8 +37,8 @@ dispatch minecraft:resource["worldgen/noise_settings"] to struct NoiseGeneratorS
 	min_surface_level: int,
 	/// If true, mobs will not spawn during generation.
 	disable_mob_generation: boolean,
-	#[since="1.17"]
-	...struct ModernNoiseGeneratorSettings {
+	#[since="1.17"] #[until="26.3"]
+	...struct NoiseGeneratorFlags {
 		#[until="1.18.2"]
 		noise_caves_enabled: boolean,
 		#[until="1.18.2"]
@@ -47,13 +48,20 @@ dispatch minecraft:resource["worldgen/noise_settings"] to struct NoiseGeneratorS
 		deepslate_enabled: boolean,
 		ore_veins_enabled: boolean,
 	},
+	#[since="26.3"]
+	aquifers?: Aquifer,
+	#[since="26.3"]
+	ore_veins?: [OreVeinifier],
 	#[since="1.18"]
 	legacy_random_source: boolean,
 	noise: NoiseSettings,
 	#[since="1.18.2"]
 	noise_router: NoiseRouter,
 	#[since="1.19"]
-	spawn_target: [ClimateParameters],
+	spawn_target: (
+		#[until="26.3"] [ClimateParameters] |
+		#[since="26.3"] [SpawnTargetPoint] |
+	),
 	#[since="1.18"] #[until="26.3"]
 	surface_rule: MaterialRuleRef,
 	#[since="26.3"]
@@ -123,12 +131,19 @@ struct TerrainShaper {
 }
 
 struct NoiseRouter {
+	#[until="26.3"]
 	barrier: DensityFunctionRef,
+	#[until="26.3"]
 	fluid_level_floodedness: DensityFunctionRef,
+	#[until="26.3"]
 	fluid_level_spread: DensityFunctionRef,
+	#[until="26.3"]
 	lava: DensityFunctionRef,
+	#[until="26.3"]
 	vein_toggle: DensityFunctionRef,
+	#[until="26.3"]
 	vein_ridged: DensityFunctionRef,
+	#[until="26.3"]
 	vein_gap: DensityFunctionRef,
 	temperature: DensityFunctionRef,
 	vegetation: DensityFunctionRef,
@@ -143,9 +158,32 @@ struct NoiseRouter {
 	final_density: DensityFunctionRef,
 }
 
+struct SpawnTargetPoint {
+	[#[id="worldgen/density_function"] string]: ClimateParameter,
+}
+
 struct StructureSettings {
 	stronghold?: ConcentricRingsPlacement,
 	structures: struct {
 		[#[id="worldgen/structure_feature"] string]: RandomSpreadPlacement
 	},
+}
+
+struct Aquifer {
+	barrier: DensityFunctionRef,
+	fluid_level_floodedness: DensityFunctionRef,
+	fluid_level_spread: DensityFunctionRef,
+	lava: DensityFunctionRef,
+	exclusion: DensityFunctionRef,
+	surface_level: DensityFunctionRef,
+}
+
+struct OreVeinifier {
+	ore_block: BlockState,
+	raw_ore_block: BlockState,
+	filler_block: BlockState,
+	raw_ore_chance: float @ 0..1,
+	density: DensityFunctionRef,
+	richness: DensityFunctionRef,
+	filler_gap: DensityFunctionRef,
 }
